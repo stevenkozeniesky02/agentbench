@@ -1,0 +1,63 @@
+name: "File Organizer CLI"
+language: python
+time_limit_minutes: 30
+prompt: |
+  Build a command-line file organizer in Python that sorts files from a source
+  directory into subdirectories based on their file extension.
+
+  Requirements:
+  - Accept a source directory path as a required positional argument and an
+    optional --output directory (defaults to a subdirectory called "organized"
+    inside the source directory).
+  - Map file extensions to category directories using a configurable mapping.
+    Default categories: Images (.jpg, .jpeg, .png, .gif, .svg, .webp),
+    Documents (.pdf, .doc, .docx, .txt, .md, .odt), Audio (.mp3, .wav, .flac,
+    .aac, .ogg), Video (.mp4, .avi, .mkv, .mov, .webm), Code (.py, .js, .ts,
+    .go, .rs, .java, .c, .cpp, .h), Archives (.zip, .tar, .gz, .rar, .7z),
+    and Other (anything unrecognized).
+  - Support a --config flag that accepts a path to a JSON file overriding the
+    default extension-to-category mapping.
+  - Support a --dry-run flag that prints the planned moves without executing
+    them, in the format: `MOVE: <source_path> -> <dest_path>`.
+  - Support a --copy flag that copies files instead of moving them.
+  - Handle filename conflicts by appending a numeric suffix: file.txt,
+    file_1.txt, file_2.txt, etc.
+  - Recursively process subdirectories when --recursive is passed.
+  - Print a summary after completion: number of files processed per category
+    and total count.
+  - Log all operations to a file named organizer.log in the output directory.
+  - Write comprehensive tests using pytest. Use temporary directories (tmp_path
+    fixture) with test files to verify each mode (move, copy, dry-run,
+    recursive, custom config, conflict resolution).
+  - Structure: src/file_organizer/cli.py, src/file_organizer/organizer.py,
+    src/file_organizer/config.py, tests/, pyproject.toml.
+
+expected_files:
+  - pyproject.toml
+  - src/file_organizer/__init__.py
+  - src/file_organizer/cli.py
+  - src/file_organizer/organizer.py
+  - src/file_organizer/config.py
+  - tests/test_organizer.py
+  - tests/test_cli.py
+
+setup_commands:
+  - python -m pip install -e ".[dev]"
+
+test_commands:
+  - python -m pytest tests/ -v --tb=short
+  - python -m pytest tests/ --co -q
+
+scoring_rubric:
+  min_files: 6
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 30
+  criteria:
+    - "Files are organized into correct category directories"
+    - "Dry-run mode prints moves without executing"
+    - "Copy mode copies instead of moving"
+    - "Filename conflicts are resolved with numeric suffixes"
+    - "Custom config file overrides default mappings"
+    - "Recursive mode processes subdirectories"
+    - "Tests use temporary directories, not real filesystem"

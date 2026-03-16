@@ -1,0 +1,68 @@
+name: "URL Shortener Service with Analytics"
+language: go
+time_limit_minutes: 45
+prompt: |
+  Build a URL shortener HTTP service in Go with click analytics tracking.
+
+  Requirements:
+  - POST /shorten accepts JSON { "url": "https://..." , "custom_alias": "optional" }
+    and returns { "short_url": "http://localhost:8080/abc123", "alias": "abc123",
+    "created_at": "..." }. Generate a random 7-character alphanumeric alias if
+    no custom alias is provided. Return 409 Conflict if a custom alias is
+    already taken. Validate that the URL is well-formed.
+  - GET /{alias} redirects to the original URL with a 301 status. Return 404
+    if the alias does not exist.
+  - GET /api/stats/{alias} returns analytics: { "alias": "abc123", "original_url":
+    "...", "created_at": "...", "total_clicks": 42, "clicks_by_day": [
+    { "date": "2026-03-15", "count": 10 }, ... ], "top_referrers": [
+    { "referrer": "google.com", "count": 5 }, ... ], "top_countries": [
+    { "country": "US", "count": 20 }, ... ] }. For country detection, parse
+    the X-Forwarded-For or X-Real-IP header and use a simple mapping (or just
+    record "unknown" -- real GeoIP is not required).
+  - Record each click with: timestamp, referrer (from Referer header), user
+    agent, and IP address.
+  - Use an in-memory storage layer behind an interface so it can be swapped
+    for a database later. Protect concurrent access with sync.RWMutex.
+  - Use only the Go standard library (net/http, encoding/json, etc.) and no
+    third-party router. Implement path-based routing manually.
+  - Alias generation must avoid collisions by checking storage before
+    returning.
+  - Write table-driven tests using the testing package and httptest. Cover:
+    creating short URLs, custom aliases, alias conflicts, redirect behavior,
+    analytics accuracy after multiple clicks, 404 for unknown aliases, and
+    URL validation.
+  - Structure: main.go, handlers/shorten.go, handlers/redirect.go,
+    handlers/stats.go, storage/storage.go (interface + in-memory impl),
+    storage/storage_test.go, handlers/handlers_test.go, go.mod.
+
+expected_files:
+  - main.go
+  - go.mod
+  - handlers/shorten.go
+  - handlers/redirect.go
+  - handlers/stats.go
+  - handlers/handlers_test.go
+  - storage/storage.go
+  - storage/storage_test.go
+
+setup_commands:
+  - go mod tidy
+
+test_commands:
+  - go test ./... -v -count=1 -race
+  - go vet ./...
+
+scoring_rubric:
+  min_files: 7
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 45
+  criteria:
+    - "Short URL creation and redirect work correctly"
+    - "Custom aliases and conflict detection work"
+    - "Analytics track clicks with timestamp, referrer, user agent"
+    - "Clicks-by-day aggregation is correct"
+    - "Concurrent access is safe (uses mutex or similar)"
+    - "No third-party router; standard library only"
+    - "Table-driven tests with httptest"
+    - "Storage interface allows future backend swaps"

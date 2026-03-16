@@ -1,0 +1,91 @@
+name: "Git Repository Analyzer with Dependency Graph"
+language: python
+time_limit_minutes: 60
+prompt: |
+  Build a Git repository analyzer in Python that extracts insights from a
+  local Git repository and visualizes module dependency graphs.
+
+  Requirements:
+  - Accept a path to a local Git repository as a CLI argument. Validate that
+    it contains a .git directory.
+  - Use the git CLI (via subprocess) to extract data. Do NOT use GitPython or
+    any Git library.
+  - Generate a comprehensive report with these sections:
+    1. Overview: total commits, contributors count, date range, most active
+       branch.
+    2. Contributor stats: for each contributor, show commit count, lines added,
+       lines deleted, first and last commit dates. Sort by commit count.
+    3. Activity timeline: commits per month for the last 12 months (or full
+       history if shorter), displayed as an ASCII bar chart.
+    4. File hotspots: top 20 most frequently modified files with their change
+       counts and the primary contributor (most changes to that file).
+    5. Churn analysis: files with the highest ratio of modifications to age
+       (changes per month since creation), indicating unstable code.
+  - Dependency graph generation (Python repos only, detect by presence of
+    .py files):
+    1. Parse import statements (import X, from X import Y) in all Python files
+       on the current HEAD.
+    2. Build an internal dependency graph of project modules (ignore stdlib
+       and third-party packages; only include imports that resolve to files
+       within the repo).
+    3. Output the graph in DOT format (Graphviz) to a file named
+       dependency_graph.dot.
+    4. Also output an adjacency list in JSON format to dependency_graph.json.
+    5. Detect and report circular dependencies if any exist.
+  - Support --format flag: "text" (default, formatted for terminal) and "json"
+    (full report as JSON).
+  - Support --output flag to write the report to a file.
+  - Support --since and --until flags to limit the analysis date range.
+  - Handle edge cases: empty repositories, repos with a single commit,
+    binary files in hotspot analysis, and merge commits.
+  - Write tests using pytest: create temporary Git repos with scripted commit
+    histories using subprocess git commands. Test each analysis section,
+    dependency parsing, circular dependency detection, and CLI flags. Use
+    separate temp repos for different test scenarios.
+  - Structure: src/git_analyzer/cli.py, src/git_analyzer/git_ops.py (git
+    subprocess wrapper), src/git_analyzer/analyzers/overview.py,
+    src/git_analyzer/analyzers/contributors.py, src/git_analyzer/analyzers/
+    activity.py, src/git_analyzer/analyzers/hotspots.py, src/git_analyzer/
+    dependency.py (import parser and graph builder), src/git_analyzer/
+    formatter.py, tests/, pyproject.toml.
+
+expected_files:
+  - pyproject.toml
+  - src/git_analyzer/__init__.py
+  - src/git_analyzer/cli.py
+  - src/git_analyzer/git_ops.py
+  - src/git_analyzer/analyzers/__init__.py
+  - src/git_analyzer/analyzers/overview.py
+  - src/git_analyzer/analyzers/contributors.py
+  - src/git_analyzer/analyzers/activity.py
+  - src/git_analyzer/analyzers/hotspots.py
+  - src/git_analyzer/dependency.py
+  - src/git_analyzer/formatter.py
+  - tests/test_git_ops.py
+  - tests/test_analyzers.py
+  - tests/test_dependency.py
+  - tests/conftest.py
+
+setup_commands:
+  - python -m pip install -e ".[dev]"
+
+test_commands:
+  - python -m pytest tests/ -v --tb=short
+  - python -m pytest tests/ --co -q
+
+scoring_rubric:
+  min_files: 12
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 60
+  criteria:
+    - "Extracts accurate contributor and commit statistics"
+    - "ASCII activity timeline is correct"
+    - "File hotspot analysis identifies frequently changed files"
+    - "Dependency graph correctly parses Python imports"
+    - "Only internal project imports are included in the graph"
+    - "Circular dependencies are detected and reported"
+    - "DOT and JSON graph outputs are valid"
+    - "No Git libraries used; subprocess only"
+    - "Tests create real temporary Git repos for validation"
+    - "Date range filtering works correctly"

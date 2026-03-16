@@ -1,0 +1,96 @@
+name: "DAG-Based Workflow Engine with Retry and Timeout"
+language: typescript
+time_limit_minutes: 60
+prompt: |
+  Build a DAG-based workflow engine in TypeScript that executes tasks
+  respecting dependency ordering, with retry policies, timeouts, and
+  real-time status tracking.
+
+  Requirements:
+  - A Workflow is defined as a directed acyclic graph (DAG) of Steps. Each
+    Step has: a unique name, an async execute function (receives a context
+    object, returns a result), a list of dependency step names (steps that
+    must complete before this one runs), an optional retry policy, and an
+    optional timeout in milliseconds.
+  - Provide a fluent builder API:
+    new WorkflowBuilder()
+      .addStep("fetch-data", fetchFn, { timeout: 5000 })
+      .addStep("transform", transformFn, { dependsOn: ["fetch-data"], retries: 3 })
+      .addStep("validate", validateFn, { dependsOn: ["transform"] })
+      .addStep("save", saveFn, { dependsOn: ["validate", "transform"] })
+      .build()  // validates the DAG and returns a Workflow
+  - The build() method must validate the DAG: detect cycles (throw an error
+    with the cycle path), verify all dependency references exist, and verify
+    there is at least one root step (no dependencies).
+  - Execution engine: run steps with maximum parallelism -- all steps whose
+    dependencies are satisfied run concurrently. Use Promise.all for
+    parallel execution within each wave.
+  - Context object: steps receive { workflowId, stepName, attempt, results }
+    where results is a read-only map of completed step names to their return
+    values. Steps can use upstream results as input.
+  - Retry policy: { maxRetries: number, backoffMs: number, backoffMultiplier:
+    number }. On failure, retry up to maxRetries times with exponential
+    backoff. Default: no retries.
+  - Timeout: if a step exceeds its timeout, abort it (via AbortController
+    signal passed in context) and mark it as failed. Downstream steps are
+    skipped.
+  - When a step fails (after all retries exhausted), mark all transitive
+    downstream steps as "skipped" and continue executing any independent
+    branches.
+  - Workflow execution returns a WorkflowResult: { status: "completed" |
+    "partial" | "failed", duration: number, steps: Map<string, StepResult> }
+    where StepResult includes: status ("completed" | "failed" | "skipped" |
+    "running" | "pending"), result?, error?, attempts, duration.
+  - Event emitter: the engine emits events for step:start, step:complete,
+    step:fail, step:retry, step:skip, workflow:start, workflow:complete.
+    Allow registering listeners via engine.on(event, callback).
+  - Implement a topological sort for determining execution order.
+  - Make time-dependent logic testable: accept an optional clock for backoff
+    delays (replace setTimeout). Tests must not use real delays.
+  - Write tests using vitest: test DAG validation (cycle detection, missing
+    deps), parallel execution order, retry with backoff, timeout cancellation,
+    downstream skip on failure, context passing between steps, event emission
+    order, and complex multi-branch DAGs.
+  - Structure: src/types.ts, src/builder.ts, src/dag.ts (validation and
+    topological sort), src/engine.ts (execution), src/context.ts,
+    src/events.ts, src/index.ts, tests/, package.json, tsconfig.json.
+
+expected_files:
+  - package.json
+  - tsconfig.json
+  - src/types.ts
+  - src/builder.ts
+  - src/dag.ts
+  - src/engine.ts
+  - src/context.ts
+  - src/events.ts
+  - src/index.ts
+  - tests/builder.test.ts
+  - tests/dag.test.ts
+  - tests/engine.test.ts
+
+setup_commands:
+  - npm install
+  - npx tsc --noEmit
+
+test_commands:
+  - npx vitest run --reporter=verbose
+  - npx tsc --noEmit
+
+scoring_rubric:
+  min_files: 10
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 60
+  criteria:
+    - "DAG validation detects cycles and missing dependencies"
+    - "Topological sort produces correct execution order"
+    - "Independent steps execute in parallel"
+    - "Steps receive upstream results via context"
+    - "Retry with exponential backoff works correctly"
+    - "Timeout cancels long-running steps via AbortController"
+    - "Failed step causes downstream steps to be skipped"
+    - "Independent branches continue after a failure"
+    - "Events fire in correct order"
+    - "Tests use mock clock with no real delays"
+    - "TypeScript compiles without errors"

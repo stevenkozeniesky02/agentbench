@@ -1,0 +1,90 @@
+name: "Full-Text Search Engine with Indexing and Ranking"
+language: go
+time_limit_minutes: 60
+prompt: |
+  Build a full-text search engine in Go that indexes documents, supports
+  boolean queries, and ranks results by relevance.
+
+  Requirements:
+  - Documents have fields: id (string), title (string), body (string), and
+    optional metadata (map of string to string).
+  - Indexer: build an inverted index mapping each term to a list of postings.
+    Each posting records: document ID, term frequency, and field (title or
+    body). Apply text processing during indexing: lowercase, Unicode
+    normalization (fold accented characters to ASCII), remove punctuation,
+    and stem words using a simple suffix-stripping stemmer (implement Porter
+    stemmer lite: handle -ing, -ed, -ly, -tion, -ness, -ment, -er, -est
+    suffixes).
+  - Support stop word removal with a configurable stop word list (default
+    English set of ~50 common words).
+  - Query parser: support single terms, quoted phrases ("exact match"),
+    AND/OR/NOT boolean operators, and parenthetical grouping. Parse into an
+    AST and evaluate against the index.
+  - Ranking: implement BM25 scoring (k1=1.2, b=0.75 defaults). Title field
+    matches get a 2x boost over body matches. Return results sorted by
+    score descending.
+  - Support result highlighting: return a snippet of the body (up to 200
+    chars) with matched terms wrapped in <mark> tags.
+  - HTTP API:
+    POST /index accepts JSON { "id": "...", "title": "...", "body": "...",
+    "metadata": {} } and indexes the document. Return 201.
+    POST /index/batch accepts an array of documents. Return 201.
+    GET /search?q=<query>&page=1&per_page=10 returns { "results": [
+    { "id", "title", "score", "snippet" }], "total", "page", "per_page",
+    "query_time_ms" }.
+    DELETE /index/{id} removes a document. Return 204.
+    GET /stats returns { "total_documents", "total_terms", "avg_doc_length" }.
+  - Persistence: serialize the index to a binary file on disk. Support
+    save/load operations. The server should load the index from disk on
+    startup if the file exists.
+  - Thread safety: the index must support concurrent reads and exclusive
+    writes using sync.RWMutex.
+  - Use only the Go standard library.
+  - Write table-driven tests: test text processing (stemming, stop words),
+    the query parser (each operator, precedence, error cases), BM25 scoring
+    (verify relative ordering), snippet highlighting, HTTP endpoints, and
+    index persistence (save, restart, verify data).
+  - Structure: main.go, indexer/indexer.go, indexer/text.go (processing),
+    indexer/bm25.go (ranking), searcher/searcher.go, searcher/query.go
+    (parser), searcher/highlight.go, handlers/handlers.go, storage/storage.go,
+    tests in each package with _test.go files, go.mod.
+
+expected_files:
+  - main.go
+  - go.mod
+  - indexer/indexer.go
+  - indexer/text.go
+  - indexer/bm25.go
+  - indexer/indexer_test.go
+  - searcher/searcher.go
+  - searcher/query.go
+  - searcher/highlight.go
+  - searcher/searcher_test.go
+  - handlers/handlers.go
+  - handlers/handlers_test.go
+  - storage/storage.go
+  - storage/storage_test.go
+
+setup_commands:
+  - go mod tidy
+
+test_commands:
+  - go test ./... -v -count=1 -race
+  - go vet ./...
+
+scoring_rubric:
+  min_files: 12
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 60
+  criteria:
+    - "Inverted index correctly maps terms to document postings"
+    - "Text processing applies lowercasing, stemming, and stop words"
+    - "Boolean query parser handles AND, OR, NOT, phrases, and grouping"
+    - "BM25 scoring produces correct relative rankings"
+    - "Title field boost affects ranking appropriately"
+    - "Snippet highlighting marks matched terms"
+    - "Index persists to disk and loads on startup"
+    - "Concurrent read/write safety verified with race detector"
+    - "Standard library only, no third-party dependencies"
+    - "HTTP API returns correct status codes and JSON"

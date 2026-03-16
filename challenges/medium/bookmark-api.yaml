@@ -1,0 +1,70 @@
+name: "Bookmark Manager REST API"
+language: python
+time_limit_minutes: 45
+prompt: |
+  Build a REST API for a bookmark manager using Python with FastAPI and SQLite.
+
+  Requirements:
+  - Bookmarks have fields: id (auto-generated UUID), url (required, must be
+    valid URL), title (required, max 200 chars), description (optional, max
+    1000 chars), tags (list of strings), created_at, updated_at.
+  - CRUD endpoints: POST /bookmarks (create), GET /bookmarks (list with
+    filtering), GET /bookmarks/{id}, PUT /bookmarks/{id} (full update),
+    PATCH /bookmarks/{id} (partial update), DELETE /bookmarks/{id}.
+  - GET /bookmarks supports query parameters: tag (filter by tag, multiple
+    allowed), search (full-text search across title, description, and url),
+    sort (created_at or title, with optional -prefix for descending),
+    page and per_page (pagination, default page=1, per_page=20, max 100).
+  - GET /bookmarks returns a paginated envelope: { items: [...], total: int,
+    page: int, per_page: int, pages: int }.
+  - GET /tags returns all unique tags with their bookmark counts, sorted by
+    count descending.
+  - Input validation: reject invalid URLs, enforce max lengths, reject empty
+    tags, reject duplicate tags within a bookmark.
+  - Return appropriate HTTP status codes: 201 for create, 200 for success,
+    404 for not found, 422 for validation errors.
+  - Use SQLite via aiosqlite for persistence. Store tags in a separate table
+    with a many-to-many relationship.
+  - Use Pydantic models for request/response schemas.
+  - Write tests using pytest with httpx.AsyncClient (FastAPI TestClient).
+    Cover all CRUD operations, filtering, search, pagination, validation
+    errors, and 404 cases.
+  - Structure: app/main.py, app/models.py (Pydantic schemas), app/database.py
+    (SQLite setup), app/routes/bookmarks.py, app/routes/tags.py, tests/,
+    requirements.txt.
+
+expected_files:
+  - requirements.txt
+  - app/__init__.py
+  - app/main.py
+  - app/models.py
+  - app/database.py
+  - app/routes/__init__.py
+  - app/routes/bookmarks.py
+  - app/routes/tags.py
+  - tests/test_bookmarks.py
+  - tests/test_tags.py
+  - tests/conftest.py
+
+setup_commands:
+  - python -m pip install -r requirements.txt
+  - python -m pip install pytest pytest-asyncio httpx
+
+test_commands:
+  - python -m pytest tests/ -v --tb=short
+  - python -m pytest tests/ --co -q
+
+scoring_rubric:
+  min_files: 9
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 45
+  criteria:
+    - "All CRUD endpoints work correctly"
+    - "Pagination returns correct envelope structure"
+    - "Tag filtering and full-text search work"
+    - "Input validation rejects invalid URLs and enforces limits"
+    - "SQLite persistence with proper many-to-many tag relationship"
+    - "Correct HTTP status codes for all responses"
+    - "Tests cover happy paths, validation errors, and 404s"
+    - "Pydantic models used for serialization"

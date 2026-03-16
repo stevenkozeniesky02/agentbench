@@ -1,0 +1,69 @@
+name: "Persistent Key-Value Store with TTL"
+language: rust
+time_limit_minutes: 45
+prompt: |
+  Build a persistent key-value store library in Rust that supports TTL
+  (time-to-live) expiration, basic transactions, and a simple TCP protocol.
+
+  Requirements:
+  - Keys are strings (max 256 bytes). Values are arbitrary bytes (max 1 MB).
+  - Core operations: get(key) -> Option<Vec<u8>>, set(key, value, optional_ttl),
+    delete(key) -> bool, exists(key) -> bool, keys(pattern) -> Vec<String>
+    where pattern supports simple glob (* and ?).
+  - TTL support: when a TTL (in seconds) is provided with set(), the key
+    expires after that duration. Expired keys must not be returned by get()
+    or keys(). Implement lazy expiration (check on access) plus a background
+    cleanup that runs periodically to remove expired keys.
+  - Persistence: write all mutations to an append-only log file (write-ahead
+    log). On startup, replay the log to reconstruct state. Implement a
+    compaction method that rewrites the log with only live keys.
+  - Thread safety: the store must be safe to use from multiple threads.
+    Use Arc<RwLock<...>> or similar.
+  - Implement a basic TCP server that accepts newline-delimited text commands:
+    SET key value [EX seconds], GET key, DEL key, EXISTS key, KEYS pattern,
+    COMPACT, PING. Respond with +OK, $<length>\r\n<value>, :0/:1 for booleans,
+    -ERR <message> for errors, and *<count>\r\n for arrays (KEYS output).
+  - Do NOT use serde or any database library. Use only the standard library
+    plus optional use of the regex crate for glob-to-regex conversion.
+  - Write tests covering: get/set/delete, TTL expiration, key glob matching,
+    WAL replay after restart, compaction, concurrent access from multiple
+    threads, and TCP protocol parsing.
+  - Structure: src/lib.rs (public API), src/store.rs (core KV logic),
+    src/wal.rs (write-ahead log), src/expiry.rs (TTL management),
+    src/server.rs (TCP server), src/protocol.rs (command parsing),
+    tests/ (integration tests), Cargo.toml.
+
+expected_files:
+  - Cargo.toml
+  - src/lib.rs
+  - src/store.rs
+  - src/wal.rs
+  - src/expiry.rs
+  - src/server.rs
+  - src/protocol.rs
+  - tests/store_test.rs
+  - tests/wal_test.rs
+  - tests/protocol_test.rs
+
+setup_commands:
+  - cargo build
+  - cargo check
+
+test_commands:
+  - cargo test -- --nocapture
+  - cargo clippy -- -D warnings
+
+scoring_rubric:
+  min_files: 8
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 45
+  criteria:
+    - "Get, set, delete operations work correctly"
+    - "TTL expiration removes keys after timeout"
+    - "Write-ahead log persists mutations and replays on startup"
+    - "Compaction rewrites log with only live keys"
+    - "Glob pattern matching works for keys()"
+    - "Thread-safe concurrent access"
+    - "TCP protocol correctly parses and responds to commands"
+    - "Tests cover persistence replay and concurrent access"

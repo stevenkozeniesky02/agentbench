@@ -1,0 +1,69 @@
+name: "CSV File Analyzer"
+language: python
+time_limit_minutes: 30
+prompt: |
+  Build a CSV file analyzer CLI tool in Python that computes descriptive
+  statistics and generates summary reports.
+
+  Requirements:
+  - Accept a CSV file path as a required argument. Autodetect the delimiter
+    (comma, tab, semicolon, pipe) by sniffing the first 5 lines.
+  - Automatically classify each column as numeric, categorical, datetime, or
+    boolean based on its values. A column is numeric if at least 90% of
+    non-empty values parse as int or float. Similar heuristics for datetime
+    (ISO 8601 and common US/EU formats) and boolean (true/false, yes/no,
+    1/0).
+  - For numeric columns compute: count, mean, median, standard deviation, min,
+    max, 25th percentile, 75th percentile, and number of missing values.
+  - For categorical columns compute: count, number of unique values, top 5
+    most frequent values with their counts, and number of missing values.
+  - For datetime columns compute: count, earliest, latest, and number of
+    missing values.
+  - Print a formatted summary table to stdout using aligned columns (no
+    external table library needed, just formatted strings).
+  - Support a --column flag to analyze only specific columns (comma-separated
+    names).
+  - Support a --output flag to write the report to a file.
+  - Support a --format flag with options "text" (default) and "json".
+  - Handle malformed CSV gracefully: skip bad rows, report the count of
+    skipped rows at the end.
+  - Do NOT use pandas or polars. Use only the standard library (csv, statistics,
+    datetime modules).
+  - Write tests using pytest covering: delimiter detection, column type
+    classification, each statistic calculation, malformed row handling, and
+    JSON output format. Use small inline CSV strings or StringIO.
+  - Structure: src/csv_analyzer/cli.py, src/csv_analyzer/detector.py (delimiter
+    and type detection), src/csv_analyzer/stats.py (statistics), src/csv_analyzer/
+    formatter.py (output formatting), tests/, pyproject.toml.
+
+expected_files:
+  - pyproject.toml
+  - src/csv_analyzer/__init__.py
+  - src/csv_analyzer/cli.py
+  - src/csv_analyzer/detector.py
+  - src/csv_analyzer/stats.py
+  - src/csv_analyzer/formatter.py
+  - tests/test_detector.py
+  - tests/test_stats.py
+  - tests/test_formatter.py
+
+setup_commands:
+  - python -m pip install -e ".[dev]"
+
+test_commands:
+  - python -m pytest tests/ -v --tb=short
+  - python -m pytest tests/ --co -q
+
+scoring_rubric:
+  min_files: 7
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 30
+  criteria:
+    - "Delimiter autodetection works for comma, tab, semicolon, pipe"
+    - "Column type classification is accurate"
+    - "Numeric statistics are correct (mean, median, stddev, percentiles)"
+    - "No use of pandas or polars"
+    - "Malformed rows are skipped and counted"
+    - "JSON output format is valid and complete"
+    - "Tests use inline CSV data, not external files"

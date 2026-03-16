@@ -1,0 +1,81 @@
+name: "Distributed Task Queue with Workers"
+language: python
+time_limit_minutes: 60
+prompt: |
+  Build a distributed task queue system in Python with a broker, worker
+  processes, and a monitoring API.
+
+  Requirements:
+  - The system has three components: a Broker (central coordinator), Workers
+    (task executors), and a Client (task submitter). Communication between
+    components uses TCP sockets with JSON-encoded messages.
+  - Client API: client.submit(task_name, args, kwargs, priority=0,
+    max_retries=3, timeout_seconds=300) -> task_id. client.get_status(task_id)
+    -> TaskStatus. client.get_result(task_id, timeout=None) -> result or
+    raises TimeoutError. client.cancel(task_id) -> bool.
+  - TaskStatus includes: id, name, status (pending, running, completed, failed,
+    cancelled, retrying), result (if completed), error (if failed), submitted_at,
+    started_at, completed_at, retries_remaining, worker_id.
+  - The Broker maintains a priority queue of pending tasks. Higher priority
+    numbers are dequeued first. Tasks with equal priority are FIFO.
+  - Workers register with the Broker and poll for tasks. Each worker runs in
+    a separate process (use multiprocessing). Workers report heartbeats to
+    the Broker every 5 seconds. If no heartbeat is received for 15 seconds,
+    the Broker marks the worker as dead and requeues its running tasks.
+  - Task execution: workers import and call the task function by name from a
+    configurable task registry. Tasks that raise exceptions are retried up to
+    max_retries times with exponential backoff (1s, 2s, 4s, ...). Tasks that
+    exceed their timeout are killed and marked as failed.
+  - Implement a simple HTTP monitoring endpoint (GET /status) on the Broker
+    that returns JSON: { "pending": count, "running": count, "completed":
+    count, "failed": count, "workers": [ { "id": "...", "status": "active",
+    "current_task": "..." }, ... ] }.
+  - Include a decorator @task(name="...") for registering task functions.
+  - Ensure no shared mutable state between processes; all coordination goes
+    through the Broker's TCP protocol.
+  - Write tests using pytest and multiprocessing: test task submission and
+    retrieval, priority ordering, retry with backoff, timeout handling,
+    worker heartbeat failure, cancellation, and the monitoring endpoint.
+    Use short timeouts in tests (< 2 seconds).
+  - Structure: src/task_queue/broker.py, src/task_queue/worker.py,
+    src/task_queue/client.py, src/task_queue/protocol.py (message format),
+    src/task_queue/registry.py (task decorator and registry),
+    src/task_queue/models.py (TaskStatus and related types), tests/,
+    pyproject.toml.
+
+expected_files:
+  - pyproject.toml
+  - src/task_queue/__init__.py
+  - src/task_queue/broker.py
+  - src/task_queue/worker.py
+  - src/task_queue/client.py
+  - src/task_queue/protocol.py
+  - src/task_queue/registry.py
+  - src/task_queue/models.py
+  - tests/test_broker.py
+  - tests/test_worker.py
+  - tests/test_integration.py
+  - tests/conftest.py
+
+setup_commands:
+  - python -m pip install -e ".[dev]"
+
+test_commands:
+  - python -m pytest tests/ -v --tb=short --timeout=30
+  - python -m pytest tests/ --co -q
+
+scoring_rubric:
+  min_files: 10
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 60
+  criteria:
+    - "Tasks flow from Client through Broker to Worker and results return"
+    - "Priority queue dequeues higher priority first"
+    - "Failed tasks retry with exponential backoff"
+    - "Worker heartbeat failure triggers task requeue"
+    - "Task timeout kills the running task"
+    - "Cancellation prevents pending task execution"
+    - "Monitoring endpoint returns accurate counts"
+    - "No shared mutable state between processes"
+    - "Tests complete within 30 seconds total"

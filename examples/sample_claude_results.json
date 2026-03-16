@@ -1,0 +1,83 @@
+{
+  "agent_name": "claude-code",
+  "results": [
+    {
+      "challenge_id": "easy/password-gen",
+      "agent_name": "claude-code",
+      "score_breakdown": {
+        "does_it_build": true,
+        "tests_pass": true,
+        "tests_passed_count": 12,
+        "tests_total_count": 14,
+        "test_coverage": 0.82,
+        "code_quality": {
+          "avg_complexity": 4.2,
+          "max_complexity": 8,
+          "total_functions": 9
+        },
+        "completeness": 1.0,
+        "time_taken_seconds": 145.3,
+        "prompts_used": 3
+      },
+      "total_score": 91.39,
+      "output_dir": "./results/claude-code/easy_password-gen",
+      "timestamp": "2026-03-15T14:22:08+00:00",
+      "errors": []
+    },
+    {
+      "challenge_id": "easy/todo-api",
+      "agent_name": "claude-code",
+      "score_breakdown": {
+        "does_it_build": true,
+        "tests_pass": true,
+        "tests_passed_count": 18,
+        "tests_total_count": 22,
+        "test_coverage": 0.71,
+        "code_quality": {
+          "avg_complexity": 5.8,
+          "max_complexity": 12,
+          "total_functions": 14
+        },
+        "completeness": 0.875,
+        "time_taken_seconds": 312.7,
+        "prompts_used": 5
+      },
+      "total_score": 84.89,
+      "output_dir": "./results/claude-code/easy_todo-api",
+      "timestamp": "2026-03-15T14:28:41+00:00",
+      "errors": []
+    },
+    {
+      "challenge_id": "easy/markdown-parser",
+      "agent_name": "claude-code",
+      "score_breakdown": {
+        "does_it_build": true,
+        "tests_pass": false,
+        "tests_passed_count": 8,
+        "tests_total_count": 15,
+        "test_coverage": 0.54,
+        "code_quality": {
+          "avg_complexity": 7.1,
+          "max_complexity": 15,
+          "total_functions": 11
+        },
+        "completeness": 0.75,
+        "time_taken_seconds": 487.2,
+        "prompts_used": 8
+      },
+      "total_score": 72.04,
+      "output_dir": "./results/claude-code/easy_markdown-parser",
+      "timestamp": "2026-03-15T14:37:09+00:00",
+      "errors": [
+        "7 of 15 tests failed: table rendering and nested list edge cases"
+      ]
+    }
+  ],
+  "aggregate_score": 82.77,
+  "timestamp": "2026-03-15T14:37:09+00:00",
+  "metadata": {
+    "challenges_count": 3,
+    "model": "claude-sonnet-4-20250514",
+    "run_environment": "macOS 14.5, Python 3.12.3"
+  }
+}

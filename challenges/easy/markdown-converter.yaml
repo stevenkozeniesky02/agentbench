@@ -1,0 +1,62 @@
+name: "Markdown to HTML Converter with Syntax Highlighting"
+language: typescript
+time_limit_minutes: 30
+prompt: |
+  Build a Markdown to HTML converter in TypeScript that supports syntax
+  highlighting for code blocks.
+
+  Requirements:
+  - Parse a subset of Markdown into HTML. At minimum support: headings (h1-h6),
+    bold, italic, inline code, fenced code blocks with language annotation,
+    unordered lists, ordered lists, links, images, horizontal rules, and
+    paragraphs.
+  - Do NOT use an existing Markdown parsing library (marked, remark, etc.).
+    Implement the parser yourself. You may use a syntax highlighting library
+    such as highlight.js or Prism for the code-block highlighting step only.
+  - Fenced code blocks annotated with a language (e.g. ```python) must have
+    syntax-highlighted HTML output. Unannotated code blocks should be wrapped
+    in <pre><code> without highlighting.
+  - Expose a programmatic API: a function `convertMarkdown(input: string):
+    string` that returns the full HTML string.
+  - Also expose a CLI entry point that reads from stdin or a file path argument
+    and writes HTML to stdout.
+  - Properly escape HTML entities in non-code text (e.g., < > & ").
+  - Handle edge cases: empty input returns empty string, nested inline
+    formatting (bold inside italic), and consecutive code blocks.
+  - Write tests using vitest. Test each Markdown element type individually,
+    test the CLI interface, and test edge cases.
+  - Project structure: src/parser.ts (Markdown parsing), src/highlighter.ts
+    (code highlighting integration), src/converter.ts (public API), src/cli.ts
+    (CLI entry point), tests/ directory, package.json, tsconfig.json.
+
+expected_files:
+  - package.json
+  - tsconfig.json
+  - src/parser.ts
+  - src/highlighter.ts
+  - src/converter.ts
+  - src/cli.ts
+  - tests/parser.test.ts
+  - tests/converter.test.ts
+
+setup_commands:
+  - npm install
+  - npx tsc --noEmit
+
+test_commands:
+  - npx vitest run --reporter=verbose
+  - npx tsc --noEmit
+
+scoring_rubric:
+  min_files: 7
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 30
+  criteria:
+    - "Parser handles all required Markdown elements"
+    - "Code blocks with language annotation are syntax-highlighted"
+    - "HTML entities are properly escaped"
+    - "No use of full Markdown parsing libraries"
+    - "CLI reads from file or stdin and outputs HTML"
+    - "Tests cover each Markdown element type"
+    - "TypeScript compiles without errors"

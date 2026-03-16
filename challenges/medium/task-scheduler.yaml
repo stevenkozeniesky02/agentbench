@@ -1,0 +1,72 @@
+name: "In-Process Task Scheduler with Cron Expressions"
+language: python
+time_limit_minutes: 45
+prompt: |
+  Build an in-process task scheduler library in Python that supports cron
+  expression scheduling, one-time delayed execution, and interval-based
+  repeating tasks.
+
+  Requirements:
+  - Implement a Scheduler class that runs in a background thread and executes
+    registered tasks according to their schedule.
+  - Support three scheduling modes:
+    1. Cron: schedule("*/5 * * * *", task_fn) -- standard 5-field cron
+       (minute, hour, day-of-month, month, day-of-week). Support *, specific
+       values, ranges (1-5), steps (*/10), and comma-separated lists (1,3,5).
+    2. Interval: schedule_interval(seconds=30, task_fn) -- repeats every N
+       seconds.
+    3. One-time: schedule_once(delay_seconds=60, task_fn) -- fires once after
+       the delay.
+  - Each scheduled task has a name (unique string identifier), a callable, and
+    optional keyword arguments passed to the callable.
+  - Implement a cron expression parser from scratch. Do NOT use croniter,
+    APScheduler, or any scheduling library.
+  - The scheduler must handle task exceptions gracefully: log the error and
+    continue running other tasks. Never crash the scheduler thread.
+  - Support task cancellation by name: scheduler.cancel("task_name").
+  - Support pausing and resuming the entire scheduler.
+  - Provide a method scheduler.get_status() that returns a list of all
+    registered tasks with their next scheduled run time, last run time, and
+    run count.
+  - The scheduler should be stoppable via scheduler.stop() which waits for
+    any currently running task to finish before shutting down.
+  - Make time-dependent logic testable by accepting an optional clock function
+    (defaults to time.time). Tests must use a mock clock and not rely on
+    real time or sleeps.
+  - Write tests covering: cron parsing for all supported expressions, interval
+    scheduling, one-time tasks, error handling (task raises exception),
+    cancellation, pause/resume, and status reporting.
+  - Structure: src/task_scheduler/scheduler.py, src/task_scheduler/cron.py
+    (cron parser), src/task_scheduler/task.py (task model), tests/,
+    pyproject.toml.
+
+expected_files:
+  - pyproject.toml
+  - src/task_scheduler/__init__.py
+  - src/task_scheduler/scheduler.py
+  - src/task_scheduler/cron.py
+  - src/task_scheduler/task.py
+  - tests/test_cron.py
+  - tests/test_scheduler.py
+
+setup_commands:
+  - python -m pip install -e ".[dev]"
+
+test_commands:
+  - python -m pytest tests/ -v --tb=short
+  - python -m pytest tests/ --co -q
+
+scoring_rubric:
+  min_files: 6
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 45
+  criteria:
+    - "Cron parser correctly handles *, ranges, steps, and lists"
+    - "Cron parser is implemented from scratch, no external libraries"
+    - "Interval and one-time scheduling work correctly"
+    - "Task exceptions are caught and logged without crashing"
+    - "Cancellation removes a task by name"
+    - "Pause/resume controls the entire scheduler"
+    - "Tests use mock clock with no real sleeps"
+    - "Scheduler shuts down cleanly"

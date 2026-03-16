@@ -1,0 +1,61 @@
+name: "JSON Schema Validator CLI"
+language: go
+time_limit_minutes: 30
+prompt: |
+  Build a CLI tool in Go that validates JSON documents against JSON Schema
+  (draft 2020-12 subset).
+
+  Requirements:
+  - Accept two arguments: the path to a JSON schema file and the path to a
+    JSON document (or - for stdin).
+  - Support the following JSON Schema keywords: type (string, number, integer,
+    boolean, array, object, null), required, properties, items, minLength,
+    maxLength, minimum, maximum, enum, pattern (regex), minItems, maxItems,
+    additionalProperties (boolean only), and $ref for local references using
+    JSON Pointer syntax (e.g., "#/definitions/Address").
+  - On successful validation, print "VALID" and exit with code 0.
+  - On validation failure, print each error on its own line in the format:
+    `ERROR at <json_pointer_path>: <description>` and exit with code 1.
+    Collect all errors rather than stopping at the first one.
+  - On malformed JSON or schema, print a clear error message and exit code 2.
+  - Support a --quiet flag that suppresses output and only uses exit codes.
+  - Support a --format flag with options "text" (default) and "json" that
+    outputs validation errors as a JSON array of objects with keys: path,
+    message.
+  - Do NOT use a third-party JSON Schema validation library. Implement the
+    validation logic yourself. You may use the standard library encoding/json
+    and regexp packages.
+  - Organize the code: main.go (CLI entry point), validator/validator.go
+    (core validation logic), validator/errors.go (error types), and
+    validator/validator_test.go (tests).
+  - Write table-driven tests covering: each supported keyword, $ref
+    resolution, multiple errors in one document, malformed input, and the
+    --quiet and --format flags.
+
+expected_files:
+  - main.go
+  - go.mod
+  - validator/validator.go
+  - validator/errors.go
+  - validator/validator_test.go
+
+setup_commands:
+  - go mod tidy
+
+test_commands:
+  - go test ./... -v -count=1
+  - go vet ./...
+
+scoring_rubric:
+  min_files: 5
+  must_have_tests: true
+  must_have_readme: false
+  max_time_minutes: 30
+  criteria:
+    - "Validates all required JSON Schema keywords correctly"
+    - "Collects all errors instead of failing on first"
+    - "Error messages include JSON pointer paths"
+    - "$ref resolution works for local definitions"
+    - "Exit codes are correct (0 valid, 1 invalid, 2 malformed)"
+    - "No third-party JSON Schema libraries used"
+    - "Table-driven tests with good coverage"
