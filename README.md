@@ -23,7 +23,7 @@ Every agent gets the same prompt. Every result is scored with the same rubric. T
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/agentbench.git
+git clone https://github.com/stevenkozeniesky02/agentbench.git
 cd agentbench
 
 # Install in development mode

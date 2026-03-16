@@ -35,6 +35,10 @@ def check_build(
         try:
             result = subprocess.run(
                 command,
+                # shell=True is intentional: setup_commands are shell command
+                # strings defined in challenge YAML files (trusted input), not
+                # user-supplied input.  They may contain pipes, redirects, and
+                # other shell syntax that require a shell interpreter.
                 shell=True,
                 cwd=str(output_dir),
                 capture_output=True,

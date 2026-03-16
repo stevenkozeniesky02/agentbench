@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -57,8 +58,8 @@ def _python_complexity(output_dir: Path) -> float:
     """Use radon to compute average cyclomatic complexity for Python code."""
     try:
         result = subprocess.run(
-            f"radon cc -a -nc {output_dir}",
-            shell=True,
+            f"radon cc -a -nc {shlex.quote(str(output_dir))}",
+            shell=True,  # shell=True needed: radon invoked as shell command
             capture_output=True,
             text=True,
             timeout=_QUALITY_TIMEOUT_SECONDS,

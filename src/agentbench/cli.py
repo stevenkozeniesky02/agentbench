@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -15,11 +14,10 @@ from agentbench import __version__
 from agentbench.loader import find_challenge, load_all, load_tier
 from agentbench.models import (
     BenchmarkRun,
-    ChallengeResult,
     Challenge,
-    ScoreBreakdown,
-    compute_total_score,
+    ChallengeResult,
 )
+from agentbench.runner import run_challenge
 from agentbench.report import (
     compare_runs,
     generate_full_report,
@@ -121,67 +119,6 @@ def _build_challenge_list_table(challenges: list[Challenge]) -> Table:
     return table
 
 
-def _run_single_challenge(adapter, challenge: Challenge, output_dir: Path) -> ChallengeResult:
-    """Execute a single challenge through an adapter and collect metrics.
-
-    This is a simplified runner that invokes the adapter, then builds
-    a ChallengeResult. Full metric collection (build check, test runner,
-    coverage, quality) would be integrated here in production.
-    """
-    from agentbench.metrics import check_build, run_tests, measure_coverage, measure_quality
-
-    challenge_output = output_dir / challenge.id.replace("/", "_")
-    challenge_output.mkdir(parents=True, exist_ok=True)
-
-    adapter_result = adapter.run_challenge(
-        prompt=challenge.prompt,
-        output_dir=challenge_output,
-        time_limit_minutes=challenge.time_limit_minutes,
-    )
-
-    build_ok = check_build(challenge_output, challenge.setup_commands)
-    test_result = run_tests(challenge_output, challenge.test_commands)
-    coverage = measure_coverage(challenge_output)
-    quality = measure_quality(challenge_output)
-
-    errors: list[str] = []
-    if adapter_result.error:
-        errors = [adapter_result.error]
-
-    breakdown = ScoreBreakdown(
-        does_it_build=build_ok,
-        tests_pass=test_result.get("all_passed", False),
-        tests_passed_count=test_result.get("passed", 0),
-        tests_total_count=test_result.get("total", 0),
-        test_coverage=coverage.get("line_rate", 0.0),
-        code_quality=quality,
-        completeness=_compute_completeness(challenge_output, challenge.expected_files),
-        time_taken_seconds=adapter_result.time_taken_seconds,
-        prompts_used=adapter_result.prompts_used,
-    )
-
-    total = compute_total_score(breakdown)
-    now = datetime.now(timezone.utc).isoformat()
-
-    return ChallengeResult(
-        challenge_id=challenge.id,
-        agent_name=adapter.name,
-        score_breakdown=breakdown,
-        total_score=round(total, 2),
-        output_dir=str(challenge_output),
-        timestamp=now,
-        errors=errors,
-    )
-
-
-def _compute_completeness(output_dir: Path, expected_files: list[str]) -> float:
-    """Compute fraction of expected files that exist in output_dir."""
-    if not expected_files:
-        return 1.0
-    found = sum(1 for f in expected_files if (output_dir / f).exists())
-    return found / len(expected_files)
-
-
 @click.group()
 @click.version_option(version=__version__, prog_name="agentbench")
 def main() -> None:
@@ -279,7 +216,7 @@ def run(
         task = progress.add_task("Running challenges...", total=len(challenges))
         for ch in challenges:
             progress.update(task, description=f"Running {ch.id}...")
-            result = _run_single_challenge(adapter, ch, output_dir)
+            result = run_challenge(adapter, ch, output_dir)
             results = [*results, result]
             progress.advance(task)
 
